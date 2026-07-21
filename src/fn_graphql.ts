@@ -1,43 +1,41 @@
 import { schema } from './schema'
-import { APIGatewayProxyHandlerV2 } from 'aws-lambda'
+import type { APIGatewayProxyHandlerV2 } from 'aws-lambda'
 import CreateLambdaApi from 'lambda-api'
 import { getGraphQLParameters, processRequest } from 'graphql-helix'
 import type { API, HandlerFunction } from 'lambda-api'
 import type { GraphQLSchema } from 'graphql'
 
-export function APIGatewayLambda() {
+export function APIGatewayLambda(): API {
   const isTest = process.env.NODE_ENV === 'test'
   const isOffline = process.env.IS_OFFLINE === 'true'
 
   return CreateLambdaApi({
     version: 'v2',
-    logger: isTest ? false :{
-      level: isOffline ? 'debug' : 'info'
-    }
+    logger: isTest
+      ? false
+      : {
+          level: isOffline ? 'debug' : 'info',
+        },
   })
 }
 
-export const graphqlApi = /*#__PURE__*/ <TContext>(
-  schema: GraphQLSchema,
-  contextFactory?: () => Promise<TContext> | TContext,
+export const graphqlApi = (
+  graphQLSchema: GraphQLSchema,
 ): HandlerFunction => {
-  return async function graphqlHandler(req, res) {
+  return async function graphqlHandler(req, res): Promise<void> {
     const request = {
       body: req.body,
       headers: req.headers,
       method: req.method,
       query: req.query,
     }
-
     const { query, variables, operationName } = getGraphQLParameters(request)
-
     const result = await processRequest({
-      schema,
+      schema: graphQLSchema,
       query,
       variables,
       operationName,
       request,
-      contextFactory,
     })
 
     if (result.type === 'RESPONSE') {
@@ -46,22 +44,24 @@ export const graphqlApi = /*#__PURE__*/ <TContext>(
       })
       res.status(result.status)
       res.json(result.payload)
-    } else {
-      req.log.error(`Unhandled: ${result.type}`)
-      res.error(`Unhandled: ${result.type}`)
+      return
     }
+
+    req.log.error(`Unhandled GraphQL response type: ${result.type}`)
+    res.status(501)
+    res.json({ errors: [{ message: `Unsupported response type: ${result.type}` }] })
   }
 }
 
 export function mkAPIGatewayHandler(api: API): APIGatewayProxyHandlerV2 {
-  return async function apiGatewayHandler(event, ctx) {
+  return async function apiGatewayHandler(event, context) {
+    // lambda-api supports the API Gateway event; its public event type is broader.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return api.run(event as any, ctx)
+    return api.run(event as any, context)
   }
 }
 
 const api = APIGatewayLambda()
-
-api.any(graphqlApi(schema))
+api.any('/graphql', graphqlApi(schema))
 
 export const handler: APIGatewayProxyHandlerV2 = mkAPIGatewayHandler(api)

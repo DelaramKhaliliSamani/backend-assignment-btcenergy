@@ -8,9 +8,15 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
   lambdaHashingVersion: 20201221
-  memorySize: 256
+  memorySize: 512
   logRetentionInDays: 14
   timeout: 29
+  environment:
+    BLOCKCHAIN_API_BASE_URL: ${env:BLOCKCHAIN_API_BASE_URL, 'https://blockchain.info'}
+    BLOCKCHAIN_API_TIMEOUT_MS: ${env:BLOCKCHAIN_API_TIMEOUT_MS, '10000'}
+    BLOCKCHAIN_FETCH_CONCURRENCY: ${env:BLOCKCHAIN_FETCH_CONCURRENCY, '8'}
+    BLOCKCHAIN_CACHE_MAX_ENTRIES: ${env:BLOCKCHAIN_CACHE_MAX_ENTRIES, '2000'}
+    MAX_DAILY_ENERGY_DAYS: ${env:MAX_DAILY_ENERGY_DAYS, '30'}
 
 plugins:
   - serverless-esbuild
@@ -20,7 +26,7 @@ custom:
   esbuild:
     packager: yarn
     minify: false
-    sourcemap: false
+    sourcemap: true
     target: node20
     watch:
       pattern: ['src/**/*.ts']

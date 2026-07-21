@@ -1,33 +1,32 @@
 {
   "name": "backend-assignment-btcenergy",
   "version": "1.0.0",
-  "description": "Sensorfact back-end developer assignment",
+  "description": "Sensorfact backend developer assignment - Bitcoin transaction energy API",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
     "start": "serverless offline start --httpPort=4000 --host 0.0.0.0 --reloadHandler",
     "compile": "tsc -p . --noEmit",
-    "test": "jest",
-    "test:watch": "jest --watch --onlyChanged"
+    "test": "jest --runInBand",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "graphql": "^15.5.1",
     "graphql-compose": "^9.0.8",
     "graphql-helix": "^1.13.0",
-    "graphql-request": "^5.0.0",
-    "graphql-scalars": "^1.18.0",
     "lambda-api": "^0.11.2"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.80",
+    "@types/jest": "^29.5.14",
     "@types/node": "20.x",
     "@types/serverless": "^3",
-    "aws-sdk": "^2.952.0",
     "esbuild": "^0.25.0",
-    "jest": "^29.0.2",
+    "jest": "^29.7.0",
     "serverless": "^3.40.0",
     "serverless-esbuild": "^1.57.0",
     "serverless-offline": "^13.9.0",
+    "ts-jest": "^29.2.5",
     "typescript": "^5.8.0"
   }
 }
